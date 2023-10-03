@@ -74,7 +74,7 @@ async function commonAfterAll() {
   await db.end();
 }
 
-
+/**This line creates a token for a user named u1 with admin status set to false. This token is used for authentication during testing. */
 const u1Token = createToken({ username: "u1", isAdmin: false });
 
 

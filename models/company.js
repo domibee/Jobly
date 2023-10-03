@@ -1,5 +1,6 @@
 "use strict";
 
+const { query } = require("express");
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
@@ -30,7 +31,8 @@ class Company {
           `INSERT INTO companies
            (handle, name, description, num_employees, logo_url)
            VALUES ($1, $2, $3, $4, $5)
-           RETURNING handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"`,
+           RETURNING handle, name, description, num_employees AS "numEmployees", 
+           logo_url AS "logoUrl"`,
         [
           handle,
           name,
@@ -46,20 +48,66 @@ class Company {
 
   /** Find all companies.
    *
+   * 
+   * Optional parameter of searchFilters(all  are optional):
+   * -name(case-insensitive)
+   * -minEmployees
+   * -maxEmployees
+   * 
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
+  static async findAll(searchFilters={}) {
+    let query = 
           `SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+           FROM companies`;
+
+    let expressions = [];
+    let queryValues = [];
+    //use expressions and queryValues  to generatee the proper SQL
+    const { name, minEmployees,  maxEmployees } = searchFilters;
+    
+    if(minEmployees>maxEmployees){
+      throw new BadRequestError("Min employees cannot be greater than max");
+    }
+    if(minEmployees !== undefined){
+      queryValues.push(minEmployees);
+      expressions.push(`num_employees >= $${queryValues.length}`);
+    }
+    if(maxEmployees !== undefined){
+      queryValues.push(maxEmployees);
+      expressions.push(`num_employees <=$${queryValues.length}`);
+    }
+    if(name){
+      queryValues.push(`%${name}%`);
+      expressions.push(`name ILIKE $${queryValues.length}`);
+    }
+    if (expressions.length > 0) {
+      query += " WHERE " + expressions.join(" AND ");
+    }
+    query += " ORDER BY name";
+    const companiesRes = await db.query(query, queryValues);
     return companiesRes.rows;
   }
+
+// // /** Filter a company by name */ ***WORKING ON THIS
+  // static async getCompaniesByName(){
+  //   const filter = await db.query(
+  //     `SELECT handle,
+  //             name,
+  //             description,
+  //             num_employees AS "numEmployees",
+  //             logo_url AS "logoUrl"
+  //     FROM companies
+  //     WHERE name ILIKE $1`,
+  //     `%${name}%`;
+  //   const company = filter.rows;
+  //   if(!company) throw new NotFoundError(`No company: ${handle}`);
+  // }
 
   /** Given a company handle, return data about company.
    *
@@ -140,7 +188,7 @@ class Company {
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
+  
 }
-
 
 module.exports = Company;
