@@ -107,7 +107,6 @@ describe("GET /companies", function () {
     expect(resp.statusCode).toEqual(500);
   });
 });
-
 /************************************** GET /companies/:handle */
 
 describe("GET /companies/:handle", function () {
