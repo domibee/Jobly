@@ -94,21 +94,6 @@ class Company {
     return companiesRes.rows;
   }
 
-// // /** Filter a company by name */ ***WORKING ON THIS
-  // static async getCompaniesByName(){
-  //   const filter = await db.query(
-  //     `SELECT handle,
-  //             name,
-  //             description,
-  //             num_employees AS "numEmployees",
-  //             logo_url AS "logoUrl"
-  //     FROM companies
-  //     WHERE name ILIKE $1`,
-  //     `%${name}%`;
-  //   const company = filter.rows;
-  //   if(!company) throw new NotFoundError(`No company: ${handle}`);
-  // }
-
   /** Given a company handle, return data about company.
    *
    * Returns { handle, name, description, numEmployees, logoUrl, jobs }
