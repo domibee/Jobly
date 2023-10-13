@@ -4,7 +4,6 @@ const db = require("../db");
 const { NotFoundError} = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
-
 /** Related functions for companies. */
 
 class Job {
@@ -44,18 +43,21 @@ class Job {
    * Returns [{ id, title, salary, equity, companyHandle, companyName }, ...]
    * */
 
-  static async findAll({ minSalary, hasEquity, title } = {}) {
-    let query = `SELECT j.id,
-                        j.title,
-                        j.salary,
-                        j.equity,
-                        j.company_handle AS "companyHandle",
-                        c.name AS "companyName"
-                 FROM jobs j 
-                   LEFT JOIN companies AS c ON c.handle = j.company_handle`;
+  static async findAll(searchFilters = {}) {
+    // Define the query to retrieve job information
+    let query = `SELECT jobs.id,
+                        jobs.title,
+                        jobs.salary,
+                        jobs.equity,
+                        jobs.company_handle AS "companyHandle",
+                        companies.name AS "companyName"
+                 FROM jobs
+                 LEFT JOIN companies ON companies.handle = jobs.company_handle`;
+                 console.log(query)
     let whereExpressions = [];
     let queryValues = [];
 
+    const {minSalary, hasEquity, title} = searchFilters;
     // For each possible search term, add to whereExpressions and
     // queryValues so we can generate the right SQL
 
@@ -148,7 +150,7 @@ class Job {
                                 equity,
                                 company_handle AS "companyHandle"`;
     const result = await db.query(querySql, [...values, id]);
-    const job = result.rows[0];
+    let job = result.rows[0];
 
     if (!job) throw new NotFoundError(`No job: ${id}`);
 

@@ -2,7 +2,7 @@
 
 const { NotFoundError, BadRequestError } = require("../expressError");
 const db = require("../db.js");
-const Job = require("./jobs.js");
+const Job = require("./job.js");
 const {
   commonBeforeAll,
   commonBeforeEach,
@@ -38,7 +38,7 @@ describe("create", function () {
 /************************************** findAll */
 
 describe("findAll", function () {
-  test("works: no filter", async function () {
+  test("expects: find all information with no filter", async function () {
     let jobs = await Job.findAll();
     expect(jobs).toEqual([
       {
